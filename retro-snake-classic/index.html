@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Snake Classic - AI-Driven Gaming</title>
+    <link rel="icon" type="image/svg+xml" href="../public/favicon.svg">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        #gameContainer {
+            text-align: center;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #00ff00;
+            background: #001100;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+        
+        #gameInfo {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        #aiExplanation {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .retro-button {
+            background: #001100;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 8px 16px;
+            margin: 5px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .retro-button:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        .header {
+            margin-bottom: 20px;
+        }
+        
+        .subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 10px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div class="header">
+            <h1>RETRO SNAKE CLASSIC</h1>
+            <div class="subtitle">Classic Snake with Modern AI Insights</div>
+        </div>
+        
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        
+        <div id="gameInfo">
+            <div>Score: <span id="score">0</span></div>
+            <div>Speed: <span id="speed">1.0</span></div>
+            <div>Status: <span id="aiStatus">Ready</span></div>
+        </div>
+        
+        <div id="controls">
+            <button class="retro-button" onclick="toggleGame()">Start/Pause</button>
+            <button class="retro-button" onclick="resetGame()">Reset</button>
+            <button class="retro-button" onclick="toggleAIVisibility()">AI Insights</button>
+        </div>
+        
+        <div id="aiExplanation">
+            <strong>AI Insight:</strong> <span id="aiDecision">Classic Snake - Simple and timeless gameplay!</span>
+        </div>
+        
+        <div style="margin-top: 20px; font-size: 12px;">
+            <p>Use WASD or Arrow Keys to control the snake</p>
+            <p>Experience the classic game that inspired our AI-driven version</p>
+        </div>
+        
+        <div class="footer">
+            <p>Part of the AI-Driven Snake Game Project</p>
+            <p>Built with vanilla JavaScript for maximum compatibility</p>
+        </div>
+    </div>
+    
+    <script>
+        // Classic Snake Game Implementation
+        console.log('Loading Retro Snake Classic...');
+        
+        // Game state
+        let gameState = {
+            snake: [
+                { position: { x: 10, y: 10 }, direction: 'RIGHT', age: 0 },
+                { position: { x: 9, y: 10 }, direction: 'RIGHT', age: 1 },
+                { position: { x: 8, y: 10 }, direction: 'RIGHT', age: 2 }
+            ],
+            food: { x: 15, y: 10 },
+            score: 0,
+            gameStatus: 'INIT',
+            speed: 1.0,
+            gridSize: { width: 20, height: 20 },
+            gameTime: 0,
+            startTime: null
+        };
+        
+        let canvas, ctx;
+        let cellSize = 30;
+        let isRunning = false;
+        let gameLoop;
+        let gameSpeed = 200; // milliseconds between moves
+        
+        // Initialize game
+        function initGame() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            if (!canvas || !ctx) {
+                console.error('Canvas not found or context not available');
+                return;
+            }
+            
+            console.log('Canvas initialized:', canvas.width, 'x', canvas.height);
+            
+            // Set up canvas size
+            canvas.width = 600;
+            canvas.height = 600;
+            cellSize = canvas.width / gameState.gridSize.width;
+            
+            // Initial render
+            renderGame();
+            
+            // Set up keyboard controls
+            document.addEventListener('keydown', handleKeyPress);
+            
+            console.log('Retro Snake Classic initialized successfully');
+        }
+        
+        // Render game with enhanced retro effects
+        function renderGame() {
+            // Clear canvas with dark green background
+            ctx.fillStyle = '#001100';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw subtle grid
+            ctx.strokeStyle = 'rgba(0, 128, 0, 0.1)';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x <= gameState.gridSize.width; x++) {
+                ctx.beginPath();
+                ctx.moveTo(x * cellSize, 0);
+                ctx.lineTo(x * cellSize, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= gameState.gridSize.height; y++) {
+                ctx.beginPath();
+                ctx.moveTo(0, y * cellSize);
+                ctx.lineTo(canvas.width, y * cellSize);
+                ctx.stroke();
+            }
+            
+            // Draw snake with gradient effect
+            gameState.snake.forEach((segment, index) => {
+                const alpha = 1 - (index * 0.1); // Fade tail segments
+                ctx.fillStyle = index === 0 ? '#00FF00' : `rgba(0, 255, 0, ${Math.max(0.3, alpha)})`;
+                
+                // Add slight glow effect for head
+                if (index === 0) {
+                    ctx.shadowColor = '#00FF00';
+                    ctx.shadowBlur = 5;
+                } else {
+                    ctx.shadowBlur = 0;
+                }
+                
+                ctx.fillRect(
+                    segment.position.x * cellSize + 2,
+                    segment.position.y * cellSize + 2,
+                    cellSize - 4,
+                    cellSize - 4
+                );
+            });
+            
+            // Reset shadow for food
+            ctx.shadowBlur = 0;
+            
+            // Draw food with pulsing effect
+            const pulseIntensity = Math.sin(Date.now() * 0.01) * 0.3 + 0.7;
+            ctx.fillStyle = `rgba(255, 255, 0, ${pulseIntensity})`;
+            ctx.fillRect(
+                gameState.food.x * cellSize + 4,
+                gameState.food.y * cellSize + 4,
+                cellSize - 8,
+                cellSize - 8
+            );
+            
+            // Update UI
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('speed').textContent = gameState.speed.toFixed(1);
+            document.getElementById('aiStatus').textContent = gameState.gameStatus;
+            
+            // Update game time
+            if (gameState.startTime && isRunning) {
+                gameState.gameTime = Math.floor((Date.now() - gameState.startTime) / 1000);
+            }
+        }
+        
+        // Enhanced keyboard input handling
+        function handleKeyPress(event) {
+            if (!isRunning) return;
+            
+            const key = event.key.toLowerCase();
+            let newDirection = null;
+            
+            switch (key) {
+                case 'arrowup':
+                case 'w':
+                    newDirection = 'UP';
+                    break;
+                case 'arrowdown':
+                case 's':
+                    newDirection = 'DOWN';
+                    break;
+                case 'arrowleft':
+                case 'a':
+                    newDirection = 'LEFT';
+                    break;
+                case 'arrowright':
+                case 'd':
+                    newDirection = 'RIGHT';
+                    break;
+                case ' ':
+                case 'p':
+                    toggleGame();
+                    event.preventDefault();
+                    return;
+                case 'r':
+                    resetGame();
+                    event.preventDefault();
+                    return;
+            }
+            
+            if (newDirection && isValidDirection(newDirection)) {
+                gameState.snake[0].direction = newDirection;
+                event.preventDefault();
+            }
+        }
+        
+        function isValidDirection(newDirection) {
+            const head = gameState.snake[0];
+            const opposites = {
+                'UP': 'DOWN',
+                'DOWN': 'UP',
+                'LEFT': 'RIGHT',
+                'RIGHT': 'LEFT'
+            };
+            return opposites[newDirection] !== head.direction;
+        }
+        
+        // Enhanced game loop with dynamic speed
+        function updateGame() {
+            if (!isRunning) return;
+            
+            // Move snake
+            const head = gameState.snake[0];
+            const newHead = {
+                position: { ...head.position },
+                direction: head.direction,
+                age: 0
+            };
+            
+            // Update head position
+            switch (head.direction) {
+                case 'UP': newHead.position.y -= 1; break;
+                case 'DOWN': newHead.position.y += 1; break;
+                case 'LEFT': newHead.position.x -= 1; break;
+                case 'RIGHT': newHead.position.x += 1; break;
+            }
+            
+            // Check collisions
+            if (newHead.position.x < 0 || newHead.position.x >= gameState.gridSize.width ||
+                newHead.position.y < 0 || newHead.position.y >= gameState.gridSize.height ||
+                gameState.snake.some(segment => 
+                    segment.position.x === newHead.position.x && 
+                    segment.position.y === newHead.position.y)) {
+                
+                // Game over
+                isRunning = false;
+                gameState.gameStatus = 'GAME_OVER';
+                
+                // Show game over with stats
+                const finalTime = gameState.gameTime;
+                const finalScore = gameState.score;
+                const efficiency = finalScore > 0 ? Math.round((finalScore / finalTime) * 10) / 10 : 0;
+                
+                setTimeout(() => {
+                    alert(`Game Over!\\n\\nFinal Score: ${finalScore}\\nTime: ${finalTime}s\\nEfficiency: ${efficiency} pts/sec`);
+                }, 100);
+                return;
+            }
+            
+            gameState.snake.unshift(newHead);
+            
+            // Check food consumption
+            if (newHead.position.x === gameState.food.x && newHead.position.y === gameState.food.y) {
+                gameState.score += 10;
+                
+                // Increase speed slightly
+                gameState.speed = Math.min(3.0, gameState.speed + 0.05);
+                gameSpeed = Math.max(80, gameSpeed - 3);
+                
+                // Generate new food
+                generateNewFood();
+                
+                // Update game loop with new speed
+                clearInterval(gameLoop);
+                gameLoop = setInterval(updateGame, gameSpeed);
+            } else {
+                gameState.snake.pop();
+            }
+            
+            renderGame();
+        }
+        
+        function generateNewFood() {
+            do {
+                gameState.food = {
+                    x: Math.floor(Math.random() * gameState.gridSize.width),
+                    y: Math.floor(Math.random() * gameState.gridSize.height)
+                };
+            } while (gameState.snake.some(segment => 
+                segment.position.x === gameState.food.x && 
+                segment.position.y === gameState.food.y));
+        }
+        
+        // Enhanced game controls
+        function toggleGame() {
+            if (gameState.gameStatus === 'INIT' || gameState.gameStatus === 'GAME_OVER') {
+                isRunning = true;
+                gameState.gameStatus = 'PLAYING';
+                gameState.startTime = Date.now();
+                gameLoop = setInterval(updateGame, gameSpeed);
+                console.log('Game started');
+            } else if (isRunning) {
+                isRunning = false;
+                gameState.gameStatus = 'PAUSED';
+                clearInterval(gameLoop);
+                console.log('Game paused');
+            } else {
+                isRunning = true;
+                gameState.gameStatus = 'PLAYING';
+                gameLoop = setInterval(updateGame, gameSpeed);
+                console.log('Game resumed');
+            }
+        }
+        
+        function resetGame() {
+            isRunning = false;
+            clearInterval(gameLoop);
+            
+            gameState = {
+                snake: [
+                    { position: { x: 10, y: 10 }, direction: 'RIGHT', age: 0 },
+                    { position: { x: 9, y: 10 }, direction: 'RIGHT', age: 1 },
+                    { position: { x: 8, y: 10 }, direction: 'RIGHT', age: 2 }
+                ],
+                food: { x: 15, y: 10 },
+                score: 0,
+                gameStatus: 'INIT',
+                speed: 1.0,
+                gridSize: { width: 20, height: 20 },
+                gameTime: 0,
+                startTime: null
+            };
+            
+            gameSpeed = 200;
+            renderGame();
+            console.log('Game reset');
+        }
+        
+        function toggleAIVisibility() {
+            const aiExplanation = document.getElementById('aiExplanation');
+            if (aiExplanation) {
+                const isVisible = aiExplanation.style.display !== 'none';
+                aiExplanation.style.display = isVisible ? 'none' : 'block';
+                
+                if (!isVisible) {
+                    const insights = [
+                        'Classic Snake gameplay focuses on spatial awareness and planning',
+                        'Optimal strategy involves creating safe paths and avoiding corners',
+                        'Speed increases with score - balance risk vs reward',
+                        'The AI version uses this foundation to adapt to your playstyle'
+                    ];
+                    const randomInsight = insights[Math.floor(Math.random() * insights.length)];
+                    aiExplanation.innerHTML = `<strong>AI Insight:</strong> <span>${randomInsight}</span>`;
+                }
+            }
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', initGame);
+        
+        // Add some keyboard shortcuts info
+        console.log('Keyboard shortcuts: WASD/Arrows (move), Space/P (pause), R (reset)');
+    </script>
+</body>
+</html>

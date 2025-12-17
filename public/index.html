@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Driven Retro Snake Game</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        #gameContainer {
+            text-align: center;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #00ff00;
+            background: #001100;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+        
+        #gameInfo {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        #aiExplanation {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .retro-button {
+            background: #001100;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 8px 16px;
+            margin: 5px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+        }
+        
+        .retro-button:hover {
+            background: #00ff00;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <h1>AI-DRIVEN SNAKE</h1>
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        
+        <div id="gameInfo">
+            <div>Score: <span id="score">0</span></div>
+            <div>Speed: <span id="speed">1.0</span></div>
+            <div>AI Status: <span id="aiStatus">Monitoring</span></div>
+        </div>
+        
+        <div id="controls">
+            <button class="retro-button" onclick="toggleGame()">Start/Pause</button>
+            <button class="retro-button" onclick="resetGame()">Reset</button>
+            <button class="retro-button" onclick="toggleAIVisibility()">Toggle AI Info</button>
+        </div>
+        
+        <div id="aiExplanation">
+            <strong>AI Decision:</strong> <span id="aiDecision">Initializing...</span>
+        </div>
+        
+        <div style="margin-top: 20px; font-size: 12px;">
+            <p>Use WASD or Arrow Keys to control the snake</p>
+            <p>The AI adapts difficulty based on your performance</p>
+        </div>
+    </div>
+    
+    <script src="browser-game.js"></script>
+</body>
+</html>

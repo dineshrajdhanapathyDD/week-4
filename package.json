@@ -1,0 +1,28 @@
+{
+  "name": "ai-snake-game",
+  "version": "1.0.0",
+  "description": "AI-driven retro Snake game with adaptive difficulty and intelligent gameplay",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && xcopy /E /I /Y retro-snake-classic dist\\retro-snake-classic",
+    "build:web": "tsc && cp -r public/* dist/",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "serve": "npx http-server dist -p 8080",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "keywords": ["snake", "game", "ai", "retro", "adaptive"],
+  "author": "AI Snake Game Developer",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0",
+    "fast-check": "^3.15.0",
+    "http-server": "^14.1.0"
+  },
+  "dependencies": {}
+}
